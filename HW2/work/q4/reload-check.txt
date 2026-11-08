@@ -1,0 +1,2 @@
+Predicted digits: [6, 2, 9, 1, 4, 2, 1, 0, 9, 7, 7, 8, 3, 9, 2, 2]
+Reload check passed: logits match on the same fixed image batch.

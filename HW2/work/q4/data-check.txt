@@ -1,0 +1,4 @@
+Training/test examples: 60000 10000
+Images: (64, 1, 28, 28) torch.float32
+Labels: (64,) torch.int64
+Image range: -1.0 1.0

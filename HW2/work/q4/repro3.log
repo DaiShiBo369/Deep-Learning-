@@ -1,0 +1,15 @@
+﻿python.exe : WARNING: Insecure writes have been enabled via environment variable 'JUPYTER_ALLOW_INSECURE_WRITES'! If th
+is is not intended, remove the variable or set its value to 'False'.
+所在位置 行:1 字符: 563
++ ... nb" -Force; & $py -m nbconvert --to notebook --execute "HW2\_repro.ip ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: Insecu...lue to 'False'.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[NbConvertApp] Converting notebook HW2\_repro.ipynb to notebook
+WARNING: Insecure writes have been enabled via environment variable 'JUPYTER_ALLOW_INSECURE_WRITES'! If this is not int
+ended, remove the variable or set its value to 'False'.
+Proactor event loop does not implement add_reader family of methods required for zmq. Registering an additional selecto
+r thread for add_reader support via tornado. Use `asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())` to a
+void this warning.
+[NbConvertApp] Writing 20008 bytes to work\q4\repro_executed.ipynb

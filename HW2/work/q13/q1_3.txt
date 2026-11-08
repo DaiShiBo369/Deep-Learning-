@@ -1,0 +1,21 @@
+
+========================================================================
+Part 1: the assignment snippet (only the leaf x keeps .grad)
+========================================================================
+x                = 2.0
+y = 3 * x        = 6.0
+loss = y ** 2    = 36.0
+x.grad           = 36.0    (expected 36.0 = d loss / d x = 18 x)
+y.grad           = None    (expected None: autograd only keeps .grad for leaves)
+y.is_leaf        = False
+
+========================================================================
+Part 2: retaining the gradient of y (fresh graph, y2.retain_grad())
+========================================================================
+y2 = 3 * x2      = 6.0
+loss2 = y2 ** 2  = 36.0
+y2.grad          = 12.0    (expected 12.0 = d loss / d y = 2 y)
+x2.grad          = 36.0    (expected 36.0 = d loss / d x = 18 x)
+y.grad (first graph, unchanged) = None
+
+All checks passed.

@@ -1,0 +1,421 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "cell-01",
+   "metadata": {},
+   "source": [
+    "# Homework 1: Softmax for MNIST Classification\n",
+    "\n",
+    "Build a ten-class linear classifier in NumPy. Complete the four marked `TODO` blocks, run the checks, and use your results in a short PDF report. See `HW1_Softmax_MNIST.tex` for full instructions and grading.\n",
+    "\n",
+    "**Setup:** Python 3, NumPy, and Matplotlib. Keep this notebook, `mnist_data_loader.py`, and the supplied `mnist_data/` directory together in `HW1/`. The helper reads the local IDX files; running the notebook does not require internet access. Do not submit the dataset directory."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "cell-02",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
+    "from mnist_data_loader import load_mnist\n",
+    "\n",
+    "SEED = 2026"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "cell-03",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "train / validation / test: (50000, 784) (10000, 784) (10000, 784)\n"
+     ]
+    }
+   ],
+   "source": [
+    "images_all, labels_all, images_test, labels_test = load_mnist()\n",
+    "assert images_all.shape == (60_000, 28, 28) and images_test.shape == (10_000, 28, 28)\n",
+    "X_all = images_all.reshape(60_000, 784).astype(np.float32) / 255.0\n",
+    "y_all = labels_all\n",
+    "X_test = images_test.reshape(10_000, 784).astype(np.float32) / 255.0\n",
+    "y_test = labels_test\n",
+    "\n",
+    "# Split the original training data; do not use the test set for training or selection.\n",
+    "permutation = np.random.default_rng(SEED).permutation(60_000)\n",
+    "train_indices, val_indices = permutation[:50_000], permutation[50_000:]\n",
+    "X_train, y_train = X_all[train_indices], y_all[train_indices]\n",
+    "X_val, y_val = X_all[val_indices], y_all[val_indices]\n",
+    "assert X_train.shape == (50_000, 784) and X_val.shape == (10_000, 784)\n",
+    "print('train / validation / test:', X_train.shape, X_val.shape, X_test.shape)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "cell-04",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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hYWJiPnjDMeOHVOzN4A/89lnn0nVqlXl+++/l+joaImOjpbFixeLiMjatWslOjpazpw543KXALKrpk2byt69eyUqKkpu3LghVatWlfj4eKlataqEhoaqj7IDnoiPj5fWrVtLsWLFZN26dVKyZEm3WwIAJX/+/DJ48GA5ffo0c4Mzwa/WvfTH7J8SJUq43AkCSWRkpIj8fleicuXK3cp3794t58+fv/XngCeeeeYZOX36tBw/fvxW9sdvYv54+/D169fdag8ApFixYpa7gqanp8vatWulY8eO3B4bf9l//vMfadGihRQqVEjWr18vpUuXdrslALgtbsLgGQ6lMpGQkCDVq1eX4ODgW9nx48flX//6l5QuXVoaNmzoYncINM2bN5fy5cvL5MmTpWvXrrfebj5x4kS55557pG/fvi53iEAyatQola1du1YWL14snTp1khdeeMGFrgDgd7t375bKlStbDp/GjBkjly5dktdff93FzhCI9uzZI82aNZMCBQpIbGws7y4H4Dd++uknqV27tuUu2KmpqTJz5kwpWLCgPP744y525/84lMrExo0bpWvXrhIZGSlly5aV5ORkWbhwoRQsWFCWLVsmefLkcbtFBJDg4GBZtGiRtGrVSv72t79JmzZtJD4+XmJiYmTevHm8BR2Aq7Zv3y6xsbEi8vvdQq9fvy7R0dEiIlKxYkV58sknXewOgWbTpk3y9NNPS9OmTaVAgQKyZs0a2b9/v8TExFjeLQxk5tq1a9KsWTM5efKkDB48+NZH1f9QokQJ6dWrl0vdIRBdvXpVPvzwQxH5/U0IIiIrV668dafsqKgofs6Dxz7//HPp37+/NGjQQEqVKiUnTpyQZcuWSXp6uixdulQKFy7sdot+LSiD95Rl6tSpUxITEyNJSUmSO3duiYiIkFatWknu3Lndbg0B6uzZs7J06VLZv3+/3HfffdKxY0d+4wefSEpKkpkzZ0rnzp2lfv36breDALNhwwZZuXKl8c/Cw8OlX79+zjaEgPfbb7/JqlWr5OzZs1K9enVp27at3HPPPW63hQCTmpoqo0ePvu2fly5dWoYOHepgRwh0V65c+dN3bL799tu37hoKeOLQoUO3fvmSN29eCQ8Pl5YtW3IjKw9wKAUAAAAAAADHMWESAAAAAAAAjuNQCgAAAAAAAI7jUAoAAAAAAACO41AKAAAAAAAAjuNQCgAAAAAAAI7jUAoAAAAAAACO41AKAAAAAAAAjsvl6cKgoKCs7AMBKCMjw+vHsp9gx36CL7Gf4GvsKfgS+wm+xH6CL7Gf4Eue7CfeKQUAAAAAAADHcSgFAAAAAAAAx3EoBQAAAAAAAMdxKAUAAAAAAADHcSgFAAAAAAAAx3EoBQAAAAAAAMdxKAUAAAAAAADHcSgFAAAAAAAAx3EoBQAAAAAAAMdxKAUAAAAAAADHcSgFAAAAAAAAx3EoBQAAAAAAAMdxKAUAAAAAAADHcSgFAAAAAAAAx3EoBQAAAAAAAMdxKAUAAAAAAADHcSgFAAAAAAAAx3EoBQAAAAAAAMflcrsBAFZ16tRR2eDBg1XWp08flc2dO9dST5kyRa2Jj4+/g+4AAACAwDFp0iSVDRkyxFLv3LlTrWnbtq3KDh486LvGAIgI75QCAAAAAACACziUAgAAAAAAgOM4lAIAAAAAAIDjOJQCAAAAAACA44IyMjIyPFoYFJTVvbguZ86cKitYsKBX1zINps6XL5/KKleubKn/8Y9/qDXR0dEq69Gjh8pSU1Mt9bhx49SaN998UzfrJQ+3jlF22E+eqlmzpqVet26dWhMaGurVtS9cuKCyokWLenWtrMZ+CkxNmzZV2YIFC1TWqFEjle3ZsydLehJhP/mj0aNHq8z+nJQjh/5dWePGjVW2YcMGn/XlKfYUfIn9lDUKFCigsvz581vqJ554Qq0pVqyYyiZOnKiya9eu3UF3WYf99D9lypRR2U8//aSyQoUKWWrT36Fpr6xevdrr3gIF++l/KlWqpLLg4GCVNWzY0FJPmzZNrbl586bvGjNYsWKFyrp3726p09LSsrQHE0/2E++UAgAAAAAAgOM4lAIAAAAAAIDjOJQCAAAAAACA43K53cCdCgsLU1nu3LlV1qBBA0sdGRmp1tg/Wywi0qlTJ++b88CRI0cs9eTJk9Wajh07quzSpUsq++WXXyy1GzM38OcefvhhlS1dutRSm+aYmT6La9oD9s8Jm+ZH1a9fX2Xx8fGZXiu7sH8mXMT897hs2TIn2vF79erVU9m2bdtc6AT+pF+/fiobOXKkyjyZr3Ansy0A3B1Mc4JM31MeffRRlYWHh3v1NUuWLKmyIUOGeHUtOOfUqVMq27hxo8rat2/vRDvwY9WrV7fUptcuXbp0UZlp/uX9999vqU2vb7L69YxpT8+YMcNSv/jii2rNxYsXs6olj/FOKQAAAAAAADiOQykAAAAAAAA4jkMpAAAAAAAAOI5DKQAAAAAAADguoAad16xZU2Xr1q1TmWlQtD8wDTwbPXq0pb58+bJas2DBApUdO3ZMZefOnbPUe/bs+astwkv58uVTWe3atVU2f/58lZkGaXoiKSlJZePHj7fUCxcuVGs2b96sMvs+FBF57733vOor0DVu3FhlFStWVFl2HXRuH+5YtmxZtebBBx9UWVBQUJb1BP9j2gN58+Z1oRM45ZFHHrHUvXr1UmsaNWqkMvugWZPhw4erLDk5WWWmm9jYn3e3bt2a6deDs6pUqaIy+zDenj17qjUhISEqMz3XHD582FKbbhRTtWpVlXXt2lVl06ZNs9SJiYlqDdyVkpKisoMHD7rQCfyd/WedNm3auNRJ1unTp4+l/uSTT9Qa08+GTuOdUgAAAAAAAHAch1IAAAAAAABwHIdSAAAAAAAAcByHUgAAAAAAAHBcQA06P3TokMrOnDmjsqwedG4fknn+/Hm15vHHH1dZWlqayubNm+ezvuCemTNnqqxHjx5Z+jVNg9Tz589vqTds2KDWmAZ516hRw2d9BTr7QEARkbi4OBc68U/2wfzPPfecWmMa6M8w2LtXs2bNVBYVFeXRY+37om3btmrNiRMnvGsMWaZbt24qmzRpkqW+99571RrTEOrY2FiVFStWzFJPmDDBo75M17dfq3v37h5dC3fO9Hr8/fffV5lpPxUoUMCrr2m6CUzLli0tdXBwsFpjeo4y7WFTBv9SqFAhlUVERDjfCPzemjVrLLWng85PnjypMvsAcfuNgUTMNz0zadCggaU23STkbsM7pQAAAAAAAOA4DqUAAAAAAADgOA6lAAAAAAAA4DgOpQAAAAAAAOC4gBp0fvbsWZWNGDFCZaZBqT///LOlnjx5skdfMyEhQWXNmze31CkpKWpN9erVVTZ06FCPvib8X506dSz1E088odaYBq6a2IeRr1y5Uq2Jjo5WWXJyssrs+/zcuXNqTZMmTVTmaa/ZgWkwIf7n448/znSNadAs7h6RkZGWes6cOWqNpzccsQ+wPnjwoPeN4Y7lyqVfFtatW1dls2bNUlm+fPks9caNG9WasWPHqmzTpk0qy5Mnj6X+4osv1JoWLVqozGT79u0erYPvdezYUWXPPvusz66/b98+ldlfo4uIHD582FJXqFDBZz3A/9i/F4mIhIWFeXWtevXqqcw0FJ/nrsA0ffp0S718+XKPHnf9+nWVHT9+3BctiYhIaGiopd65c6dac//993t0Lft/k78+J/LTFwAAAAAAABzHoRQAAAAAAAAcx6EUAAAAAAAAHBdQM6VMTJ/9XLduncouXbpkqSMiItSaZ555RmWmWT6mGVJ2v/76q8qef/75TB8H/1OzZk2VrVmzxlLbP/srIpKRkaGymJgYlfXo0cNSN2rUSK0ZPXq0ykyzfU6dOmWpf/nlF7Xm5s2bKjPNxKpdu7aljo+PV2vuBjVq1LDUxYsXd6mTwODJrCD7vw/cXfr27WupPZ1rEBsbq7K5c+f6oiX4SK9evVTmyRw5Ef3vvlu3bmrNxYsXPbqW/bGezo86cuSIyv7973979Fj4XpcuXbx+7IEDByz1tm3b1JqRI0eqzD4/yqRq1ape9wX/Z5q5+umnn6rsjTfeyPRapjXnz59X2dSpUz3oDP4mPT3dUnvy/cMJLVu2tNSFCxf2+lr258Vr1655fa2sxDulAAAAAAAA4DgOpQAAAAAAAOA4DqUAAAAAAADgOA6lAAAAAAAA4LiAH3Ru4skgzQsXLnh0reeee05lixYtstSmwdEITJUqVVLZiBEjVGYf9nz69Gm15tixYyozDVy9fPmypf7mm2/UGlPmSyEhISobNmyYpe7Zs2eW9uCWNm3aWGrT30V2ZRr6XrZs2Uwfd/To0axoBy649957Vfb3v//dUpueA02DYN9++22f9QXfGDt2rKV+5ZVX1BrTTTumTZumMvsNOTwdam7y6quvevW4IUOGqMx+AxA4x/Qa2nTTn++++05le/futdQnT570WV/c0CT7sX+vE/Fs0DmQ1bp3764y+/fOO/nZ5PXXX/f6sU7inVIAAAAAAABwHIdSAAAAAAAAcByHUgAAAAAAAHAch1IAAAAAAABw3F056NwTpuF2derUUVmjRo1U1qxZM0ttGtAI/5cnTx6VRUdHq8w+CFtE5NKlS5a6T58+as327dtVFkhDtMPCwtxuwRGVK1fOdM2vv/7qQCf+x/TvwT4g9rffflNr7P8+EBjKlCmjsqVLl3p1rSlTpqhs/fr1Xl0LvmEadmofbJ6WlqbWrF69WmUjR45U2dWrVzPtIW/evCpr0aKFyuzPP0FBQWqNaXD+ihUrMu0BzklOTlaZPwyXfvTRR91uAX4gRw7rezO4cRV8yXSDqFGjRqmsQoUKKgsODvbqayYkJKjs+vXrXl3LabxTCgAAAAAAAI7jUAoAAAAAAACO41AKAAAAAAAAjuNQCgAAAAAAAI7LtoPOU1JSVPbcc8+pLD4+XmWzZs2y1KbhraYh1x9++KHKMjIy/rRPZJ1atWqpzDTU3OTJJ5+01Bs2bPBJT/BP27Ztc7uFOxIaGmqpW7Vqpdb06tVLZaYBxHZjx45V2fnz5z1vDn7DtC9q1KiR6eO+//57lU2aNMknPcE7hQoVUtmgQYNUZn8NYhpq3qFDB696MA1vXbBggcpMN5mxW7JkicrGjx/vVV8ITEOGDFHZPffc49W1HnroIY/W/fjjjyqLi4vz6mvC/9gHm/MzWfZjv8FL79691Rr7Dc48FRkZqTJv99jFixdVZhqavmrVKpV5chMSf8A7pQAAAAAAAOA4DqUAAAAAAADgOA6lAAAAAAAA4LhsO1PKZN++fSrr16+fyubMmWOpTZ8/NWWmz77PnTvXUh87diyzNuEjEydOVFlQUJDKTPOiAnmGVI4c+iza/rl6WBUpUsRn14qIiFCZad/ZP8NeqlQptSZ37twq69mzp8rs/5+bPl++detWlV27dk1luXJZnzZ++ukntQb+zzQnaNy4cR49dtOmTZa6b9++as2FCxe86gu+YfrecO+992b6ONPcnvvuu09l/fv3V1n79u0tdXh4uFqTP39+lZlmbNiz+fPnqzWm2aDwf/ny5VNZtWrVVDZmzBhL7enMT29f4yQnJ6vMtM9v3LjhUR8A/IvpOemrr76y1GFhYU6185f88MMPKvvoo49c6CTr8E4pAAAAAAAAOI5DKQAAAAAAADiOQykAAAAAAAA4jkMpAAAAAAAAOI5B55lYtmyZypKSkiy1aWB206ZNVfbuu++q7MEHH7TU77zzjlpz9OjRTPtE5tq2bWupa9asqdaYBq7ah+AFOtPAT9N/d0JCggPduM8+9Nv0dzFjxgyVvfLKK159vRo1aqjMNOg8PT3dUl+5ckWt2bVrl8pmz56tsu3bt1tq06D+EydOqOzIkSMqCwkJsdSJiYlqDfxPmTJlLPXSpUu9vtZ///tfS23aO3BXWlqayk6dOqWyYsWKWer9+/erNabviZ4wDY6+ePGiykqWLKmy06dPW+qVK1d61QOcFRwcbKlr1aql1pi+95j2gP252bSf4uLiVNaqVSuVmYar29lv4iEi8tRTT6ls0qRJltr0bw1AYLC//ja9HveWL28sZf8ZVkSkdevWKouJifHq+v6Ad0oBAAAAAADAcRxKAQAAAAAAwHEcSgEAAAAAAMBxHEoBAAAAAADAcQw698LOnTstddeuXdWadu3aqWzOnDkqGzBggKWuWLGiWtO8efO/2iIM7AOac+fOrdacPHlSZYsWLcqynnwtT548lvqNN97w6HHr1q1T2csvv+yLlvzeoEGDLPXBgwfVmgYNGvjs6x06dEhly5cvV9nu3bst9ZYtW3zWg8nzzz+vMvsQZBE95BqBYeTIkZba22GbIiLjxo2703aQxc6fP6+yDh06qOzrr7+21EWKFFFr9u3bp7IVK1ao7NNPP7XUZ8+eVWsWLlyoMtOQa9M6+BfTayj7kPEvv/zSo2u9+eabKrO/Ltm8ebNaY9qvptcz4eHhmfZger577733VGZ/Djc9f1+7di3Trwf32QdRe/q82LBhQ5VNnTrVJz0h69h/fhcRady4saXu1auXWrN69WqVpaam+qyvZ555RmVRUVE+u36g4J1SAAAAAAAAcByHUgAAAAAAAHAch1IAAAAAAABwHIdSAAAAAAAAcFxQRkZGhkcLg4Kyupe7nmnwYa5c1lnz6enpak3Lli1VFhsb67O+vOXh1jFyYz916dLFUn/++edqzeHDh1VWtmzZLOvpTtiHmouIjB492lKbhpUfPXpUZaYh16bBflkp0PbT3cY00N/+b0ZEZMKECZbaPkDbX2Tn/VSzZk2VLV261FKHhYV5dC3TQOvOnTt71Vegy857yhumYcAbNmxQmWm48Isvvmipp0yZ4rO+/EUg7afg4GCVvfXWWyobMWJEpteKiYlRWe/evVVmH9ZvGkS+atUqldWuXVtlaWlplnr8+PFqjWkY+pNPPqkyu7Vr16rs/fffV9m5c+cyvVZCQkKma24nkPaTv7hx44alvpO/wxo1aljqXbt2eX0tf8B+ck7BggVVdubMmUwfZ7qpmun7qz/wZD/xTikAAAAAAAA4jkMpAAAAAAAAOI5DKQAAAAAAADguV+ZLYGf/3LBpvka9evVUZp8fZWL6DPLGjRv/Qne4E1999ZXbLRiZZsSYZjd069bNUpvmwXTq1MlnfSH7WbZsmdstIBPfffedygoXLpzp47Zs2aKyfv36+aIlZEMhISEqM82PMs2aWLhwYZb0hMzlzJlTZWPHjlXZ8OHDVZaSkmKpR40apdaY/r+1z48SEalbt66lnjp1qlpTq1YtlSUlJals4MCBlnr9+vVqTWhoqMoaNGigsp49e1rq9u3bqzVr1qxRmYl9jqm/zjC9W82YMcNSDxgwwOtr2Wez2ufiAbdjmh2dHfFOKQAAAAAAADiOQykAAAAAAAA4jkMpAAAAAAAAOI5DKQAAAAAAADiOQef/T+XKlVU2ePBglT311FOWukSJEl5/zRs3bljqY8eOqTWmwaD464KCgv60FhHp0KGDyoYOHZpVLRm99NJLKnvttddUVrBgQZUtWLDAUvfp08d3jQEICEWLFlWZJ88j06ZNU9nly5d90hOyn9WrV7vdArxgH9gsYh5qfuXKFZXZB0WbbrpQv359lfXv319lrVu3ttSmwflvvfWWyubMmaMy+0Bxk4sXL6rs22+/zTTr0aOHWvP0009n+vVEzK/34JzExES3W4APBAcHq6xFixYqW7duncquXr2aJT3djul73aRJkxztwV/xTikAAAAAAAA4jkMpAAAAAAAAOI5DKQAAAAAAADiOQykAAAAAAAA4LtsMOrcPIzcNJjQNNS9TpozPeti+fbvK3nnnHUv91Vdf+ezrwSojI+NPaxHz0PrJkyerbPbs2Zb6zJkzao1pmGfv3r1VFhERYalLlSql1hw6dEhlpiGypkHFgLdMNwOoVKmSpd6yZYtT7cDANNQ3Rw7vft/0448/3mk7wC0tW7Z0uwV44fXXX/doXc6cOVU2YsQIS/3GG2+oNRUqVPCqL9O13nvvPZXZbyCU1T7//HOPMvifKVOmWOqoqCi1pnz58h5dy35TJPu1RUT27dv3F7rD7URGRlrqV199Va1p3ry5ysqWLasyT26C4KkiRYpY6jZt2qg1EydOVFm+fPkyvbZpIHtqaupf6M7/8U4pAAAAAAAAOI5DKQAAAAAAADiOQykAAAAAAAA4jkMpAAAAAAAAOC7gB50XL15cZdWqVVPZ1KlTLXWVKlV81sPWrVtVNmHCBJWtWLFCZTdv3vRZH7hzpsGdgwYNUlmnTp0s9cWLF9WaihUretWDadjw+vXrVebpMFLAW6abAXg7RBt3rmbNmipr1qyZykzPK2lpaZb6ww8/VGtOnDjhfXOATbly5dxuAV44fvy4yooVK6ayPHnyqMx+4xaTVatWqWzjxo0qW758uaU+cOCAWuP0UHPc3X799VeVefp9jJ/nnGP/mT48PNyjx/3zn/9U2aVLl3zSk4gerl67dm21xvS62iQ2NtZST58+Xa0x/WwYyPjpAgAAAAAAAI7jUAoAAAAAAACO41AKAAAAAAAAjvPrmVJFihSx1DNnzlRrTDM2fDnHwDTf54MPPrDUq1evVmuuXr3qsx7gG3FxcZZ627Ztak29evU8ulaJEiUstWm2mcmZM2dUtnDhQks9dOhQj64FuOHRRx+11J9++qk7jWRDhQoVUpn9e9HtHD161FIPHz7cFy0Bt/XDDz+ozDSTjlks/qVhw4Yq69Chg8pM81JOnjxpqWfPnq3WnDt3TmX2mXeAGz766COVtWvXzoVOkBUGDhzodgvqe6SIyMqVK1Vm/1kwNTU1y3ryF7xTCgAAAAAAAI7jUAoAAAAAAACO41AKAAAAAAAAjuNQCgAAAAAAAI5zZdD5I488orIRI0ao7OGHH7bUDzzwgM96uHLlisomT56ssnfffVdlKSkpPusDzjly5Iilfuqpp9SaAQMGqGz06NFefb1JkyapbPr06Srbu3evV9cHslpQUJDbLQAIUDt37lRZUlKSykw3pylfvrylPnXqlO8aw5+6dOmSyubNm+dRBgSyXbt2qWz37t0qq1q1qhPt4Db69etnqaOiotSavn37ZmkP+/btU5n9bMF0sw/TMH3Tc2V2xDulAAAAAAAA4DgOpQAAAAAAAOA4DqUAAAAAAADgOA6lAAAAAAAA4LigjIyMDI8W+nDg7bhx41RmGnTuCdNQuq+//lpl6enplvqDDz5Qa86fP+9VD9mVh1vHiAHKsGM/ucs+OFJEZPbs2SqbNWuWpTbdHMAf3I37qUSJEipbtGiRyiIjI1W2f/9+S12hQgXfNZZN3I17ymmm7zMff/yxyjZs2GCpTYNsTa//Agn7Cb7EfoIvBdJ+ypMnj8pMzzVvv/22ygoXLmyply9frtasWbNGZStWrFDZ8ePH/6TL7M2T/cQ7pQAAAAAAAOA4DqUAAAAAAADgOA6lAAAAAAAA4DgOpQAAAAAAAOA4Vwad4+4QSEPw4P/YT/Al9hN8jT1150JDQ1X2xRdfqKxZs2aW+ssvv1Rr+vfvr7KUlJQ76M5Z7Cf4EvsJvsR+gi8x6BwAAAAAAAB+iUMpAAAAAAAAOI5DKQAAAAAAADiOmVLwGp83hi+xn+BL7Cf4Gnsqa5jmTL3zzjuWeuDAgWpNjRo1VLZr1y7fNZbF2E/wJfYTfIn9BF9iphQAAAAAAAD8EodSAAAAAAAAcByHUgAAAAAAAHAch1IAAAAAAABwHIPO4TWG4MGX2E/wJfYTfI09BV9iP8GX2E/wJfYTfIlB5wAAAAAAAPBLHEoBAAAAAADAcRxKAQAAAAAAwHEcSgEAAAAAAMBxHg86BwAAAAAAAHyFd0oBAAAAAADAcRxKAQAAAAAAwHEcSgEAAAAAAMBxHEoBAAAAAADAcRxKAQAAAAAAwHEcSgEAAAAAAMBxHEoBAAAAAADAcRxKAQAAAAAAwHEcSgEAAAAAAMBx/weW9ehiNiAFKgAAAABJRU5ErkJggg==",
+      "text/plain": [
+       "<Figure size 1200x200 with 8 Axes>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "fig, axes = plt.subplots(1, 8, figsize=(12, 2))\n",
+    "for ax, image, label in zip(axes, images_all[:8], labels_all[:8]):\n",
+    "    ax.imshow(image, cmap='gray', vmin=0, vmax=255)\n",
+    "    ax.set_title(str(label))\n",
+    "    ax.axis('off')\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-05",
+   "metadata": {},
+   "source": [
+    "## 1. Model and loss\n",
+    "\n",
+    "For a batch $X\\in\\mathbb{R}^{B\\times784}$, scores are $Z=XW+b$ (NumPy broadcasts $b$ across rows). Softmax gives $P_{ik}=\\exp(Z_{ik}-m_i)/\\sum_j\\exp(Z_{ij}-m_i)$, where $m_i=\\max_j Z_{ij}$. Minimize\n",
+    "\n",
+    "$$L=-\\frac{1}{B}\\sum_i\\log P_{i,y_i}+\\frac{\\lambda}{2}\\lVert W\\rVert_F^2.$$\n",
+    "\n",
+    "Regularize $W$, not $b$. In the report, derive both gradients and explain why subtracting the row maximum helps. In code, obtain log probabilities from shifted scores and `log(sum(exp(shifted)))`; directly taking `log(probability)` can yield `log(0)` for extreme scores."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "cell-06",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def stable_softmax(logits):\n",
+    "    \"\"\"Return row-wise probabilities; logits has shape (B, C).\"\"\"\n",
+    "    # TODO 1: Subtract each row maximum, exponentiate, and normalize each row.\n",
+    "    for i in range(logits.shape[0]):\n",
+    "        maxi=np.max(logits[i])\n",
+    "        logits[i] -= maxi\n",
+    "    logits = np.exp(logits)\n",
+    "    logits /= np.sum(logits, axis=1, keepdims=True)\n",
+    "    # Use broadcasting; no loops over examples or classes.\n",
+    "    return logits\n",
+    "    raise NotImplementedError('Complete TODO 1: stable_softmax')\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "cell-07",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def softmax_loss_and_grad(X, y, W, b, reg):\n",
+    "    \"\"\"Return scalar loss, dW, db for a nonempty batch.\n",
+    "\n",
+    "    X: (B, D), y: (B,), W: (D, C), b: (C,).\n",
+    "    L2 penalty: 0.5 * reg * sum(W ** 2). Do not penalize b.\n",
+    "    \"\"\"\n",
+    "    batch_size = X.shape[0]\n",
+    "    if batch_size == 0:\n",
+    "        raise ValueError('The batch must be nonempty')\n",
+    "    scores = X @ W + b\n",
+    "    probabilities = stable_softmax(scores)\n",
+    "    # TODO 2: Compute stable mean negative log-likelihood plus L2 penalty;\n",
+    "    # derive dW and db using a (B, C) probabilities-minus-one-hot matrix.\n",
+    "    # Do not modify probabilities in place if you need them later.\n",
+    "    Loss=-np.sum(np.log(probabilities[np.arange(batch_size), y]))/batch_size + 0.5 * reg * np.sum(W ** 2)\n",
+    "    # Compute gradients\n",
+    "    dW = X.T @ (probabilities - np.eye(probabilities.shape[1])[y]) / batch_size + reg * W\n",
+    "    db = np.sum(probabilities - np.eye(probabilities.shape[1])[y], axis=0) / batch_size\n",
+    "    return Loss, dW, db\n",
+    "    raise NotImplementedError('Complete TODO 2: loss and gradients')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "cell-08",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def predict(X, W, b):\n",
+    "    \"\"\"Return one predicted integer label per row of X.\"\"\"\n",
+    "    # TODO 3: Compute scores and select the class with the largest score.\n",
+    "    maxi = np.argmax(X @ W + b, axis=1)\n",
+    "    return maxi\n",
+    "    raise NotImplementedError('Complete TODO 3: predict')\n",
+    "\n",
+    "def accuracy(X, y, W, b):\n",
+    "    return float(np.mean(predict(X, W, b) == y))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-09",
+   "metadata": {},
+   "source": [
+    "## 2. Check your implementation\n",
+    "\n",
+    "Run this cell after completing TODO 1–3. It tests extreme logits and checks your gradients against finite differences on a small synthetic batch. Loops in this diagnostic checker are allowed; the classifier itself must be vectorized."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "cell-10",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "C:\\Users\\17857\\AppData\\Local\\Temp\\ipykernel_26872\\499776508.py:15: RuntimeWarning: divide by zero encountered in log\n",
+      "  Loss=-np.sum(np.log(probabilities[np.arange(batch_size), y]))/batch_size + 0.5 * reg * np.sum(W ** 2)\n"
+     ]
+    },
+    {
+     "ename": "AssertionError",
+     "evalue": "",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mAssertionError\u001b[39m                            Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[12]\u001b[39m\u001b[32m, line 8\u001b[39m\n\u001b[32m      4\u001b[39m \u001b[38;5;28;01massert\u001b[39;00m np.allclose(p_extreme.sum(axis=\u001b[32m1\u001b[39m), \u001b[32m1.0\u001b[39m)\n\u001b[32m      5\u001b[39m extreme_loss, _, _ = softmax_loss_and_grad(\n\u001b[32m      6\u001b[39m     np.array([[\u001b[32m1000.\u001b[39m]]), np.array([\u001b[32m1\u001b[39m]),\n\u001b[32m      7\u001b[39m     np.array([[1., -1., 0.]]), np.zeros(3), 0.0)\n\u001b[32m----> \u001b[39m\u001b[32m8\u001b[39m \u001b[38;5;28;01massert\u001b[39;00m np.isfinite(extreme_loss) \u001b[38;5;28;01mand\u001b[39;00m extreme_loss > \u001b[32m1000\u001b[39m\n\u001b[32m      9\u001b[39m \n\u001b[32m     10\u001b[39m check_rng = np.random.default_rng(\u001b[32m7\u001b[39m)\n\u001b[32m     11\u001b[39m X_check = check_rng.normal(size=(\u001b[32m5\u001b[39m, \u001b[32m4\u001b[39m))\n",
+      "\u001b[31mAssertionError\u001b[39m: "
+     ]
+    }
+   ],
+   "source": [
+    "extreme_logits = np.array([[1000., 999., -1000.], [-1000., 0., 1000.]])\n",
+    "p_extreme = stable_softmax(extreme_logits)\n",
+    "assert np.isfinite(p_extreme).all() and np.all(p_extreme >= 0)\n",
+    "assert np.allclose(p_extreme.sum(axis=1), 1.0)\n",
+    "extreme_loss, _, _ = softmax_loss_and_grad(\n",
+    "    np.array([[1000.]]), np.array([1]),\n",
+    "    np.array([[1., -1., 0.]]), np.zeros(3), 0.0)\n",
+    "assert np.isfinite(extreme_loss) and extreme_loss > 1000\n",
+    "\n",
+    "check_rng = np.random.default_rng(7)\n",
+    "X_check = check_rng.normal(size=(5, 4))\n",
+    "y_check = np.array([0, 2, 1, 2, 0])\n",
+    "W_check = check_rng.normal(scale=0.1, size=(4, 3))\n",
+    "b_check = check_rng.normal(scale=0.1, size=3)\n",
+    "reg_check = 0.03\n",
+    "loss_check, dW_check, db_check = softmax_loss_and_grad(\n",
+    "    X_check, y_check, W_check, b_check, reg_check)\n",
+    "assert np.isfinite(loss_check)\n",
+    "assert dW_check.shape == W_check.shape and db_check.shape == b_check.shape\n",
+    "assert np.array_equal(predict(X_check, W_check, b_check),\n",
+    "                      np.argmax(X_check @ W_check + b_check, axis=1))\n",
+    "\n",
+    "step = 1e-5\n",
+    "numeric_dW = np.zeros_like(W_check)\n",
+    "for index in np.ndindex(W_check.shape):\n",
+    "    W_plus, W_minus = W_check.copy(), W_check.copy()\n",
+    "    W_plus[index] += step\n",
+    "    W_minus[index] -= step\n",
+    "    plus = softmax_loss_and_grad(X_check, y_check, W_plus, b_check, reg_check)[0]\n",
+    "    minus = softmax_loss_and_grad(X_check, y_check, W_minus, b_check, reg_check)[0]\n",
+    "    numeric_dW[index] = (plus - minus) / (2 * step)\n",
+    "\n",
+    "numeric_db = np.zeros_like(b_check)\n",
+    "for index in np.ndindex(b_check.shape):\n",
+    "    b_plus, b_minus = b_check.copy(), b_check.copy()\n",
+    "    b_plus[index] += step\n",
+    "    b_minus[index] -= step\n",
+    "    plus = softmax_loss_and_grad(X_check, y_check, W_check, b_plus, reg_check)[0]\n",
+    "    minus = softmax_loss_and_grad(X_check, y_check, W_check, b_minus, reg_check)[0]\n",
+    "    numeric_db[index] = (plus - minus) / (2 * step)\n",
+    "\n",
+    "print('Largest absolute gradient errors:',\n",
+    "      np.max(np.abs(dW_check - numeric_dW)), np.max(np.abs(db_check - numeric_db)))\n",
+    "assert np.allclose(dW_check, numeric_dW, atol=1e-6, rtol=1e-5)\n",
+    "assert np.allclose(db_check, numeric_db, atol=1e-6, rtol=1e-5)\n",
+    "print('All checks passed.')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-11",
+   "metadata": {},
+   "source": [
+    "## 3. Mini-batch training\n",
+    "\n",
+    "Only the epoch and batch loops are supplied. Use each batch's gradients to update the current parameters. Validation images must never enter a parameter update. The history records full training loss and training/validation accuracy after each epoch."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-12",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def train_softmax(X_train, y_train, X_val, y_val, *, learning_rate, reg,\n",
+    "                  epochs=8, batch_size=256, seed=SEED):\n",
+    "    rng = np.random.default_rng(seed)\n",
+    "    W = np.zeros((X_train.shape[1], 10), dtype=np.float32)\n",
+    "    b = np.zeros(10, dtype=np.float32)\n",
+    "    history = {'train_loss': [], 'train_accuracy': [], 'val_accuracy': []}\n",
+    "    for epoch in range(epochs):\n",
+    "        order = rng.permutation(len(X_train))\n",
+    "        for start in range(0, len(order), batch_size):\n",
+    "            batch_indices = order[start:start + batch_size]\n",
+    "            X_batch, y_batch = X_train[batch_indices], y_train[batch_indices]\n",
+    "            _, dW, db = softmax_loss_and_grad(X_batch, y_batch, W, b, reg)\n",
+    "            # TODO 4: Update W and b using learning_rate and dW/db.\n",
+    "            # Both gradients above used the same old parameters.\n",
+    "            raise NotImplementedError('Complete TODO 4: parameter update')\n",
+    "        train_loss = softmax_loss_and_grad(X_train, y_train, W, b, reg)[0]\n",
+    "        train_acc = accuracy(X_train, y_train, W, b)\n",
+    "        val_acc = accuracy(X_val, y_val, W, b)\n",
+    "        history['train_loss'].append(float(train_loss))\n",
+    "        history['train_accuracy'].append(train_acc)\n",
+    "        history['val_accuracy'].append(val_acc)\n",
+    "        print(f'epoch {epoch + 1:2d}/{epochs}: loss={train_loss:.4f}, '\n",
+    "              f'train acc={train_acc:.4f}, val acc={val_acc:.4f}')\n",
+    "    return W, b, history"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-13",
+   "metadata": {},
+   "source": [
+    "## 4. Compare hyperparameters\n",
+    "\n",
+    "The settings below compare two learning rates with fixed regularization and two regularization values with fixed learning rate. You may modify them. Select a model using **validation accuracy only**; do not look at the test set here."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-14",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "configs = [\n",
+    "    {'name': 'baseline', 'learning_rate': 0.10, 'reg': 1e-4},\n",
+    "    {'name': 'smaller learning rate', 'learning_rate': 0.03, 'reg': 1e-4},\n",
+    "    {'name': 'stronger regularization', 'learning_rate': 0.10, 'reg': 1e-2},\n",
+    "]\n",
+    "runs = {}\n",
+    "for config in configs:\n",
+    "    print('\\nConfiguration:', config['name'])\n",
+    "    W, b, history = train_softmax(\n",
+    "        X_train, y_train, X_val, y_val,\n",
+    "        learning_rate=config['learning_rate'], reg=config['reg'],\n",
+    "        epochs=8, batch_size=256, seed=SEED)\n",
+    "    runs[config['name']] = {'config': config, 'W': W, 'b': b, 'history': history}\n",
+    "\n",
+    "print('\\nResults (copy to your report):')\n",
+    "print(f\"{'configuration':26s} {'lr':>8s} {'lambda':>10s} {'train acc':>12s} {'val acc':>10s}\")\n",
+    "for name, run in runs.items():\n",
+    "    cfg, h = run['config'], run['history']\n",
+    "    print(f\"{name:26s} {cfg['learning_rate']:8.3g} {cfg['reg']:10.3g} \"\n",
+    "          f\"{h['train_accuracy'][-1]:12.4f} {h['val_accuracy'][-1]:10.4f}\")\n",
+    "best_name = max(runs, key=lambda name: runs[name]['history']['val_accuracy'][-1])\n",
+    "print('Selected by final validation accuracy:', best_name)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-15",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig, axes = plt.subplots(1, 2, figsize=(11, 4))\n",
+    "for name, run in runs.items():\n",
+    "    h = run['history']\n",
+    "    epoch_axis = np.arange(1, len(h['train_loss']) + 1)\n",
+    "    axes[0].plot(epoch_axis, h['train_loss'], marker='o', label=name)\n",
+    "    axes[1].plot(epoch_axis, h['train_accuracy'], marker='o', label=f'{name}: train')\n",
+    "    axes[1].plot(epoch_axis, h['val_accuracy'], marker='x', linestyle='--',\n",
+    "                 label=f'{name}: val')\n",
+    "axes[0].set(xlabel='Epoch', ylabel='Training loss', title='Loss')\n",
+    "axes[1].set(xlabel='Epoch', ylabel='Accuracy', title='Accuracy')\n",
+    "for ax in axes:\n",
+    "    ax.grid(alpha=0.25)\n",
+    "    ax.legend(fontsize=8)\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-16",
+   "metadata": {},
+   "source": [
+    "## 5. Final test evaluation\n",
+    "\n",
+    "Run this cell once after selecting the configuration above. Do not change the settings based on the test result."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-17",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "best_run = runs[best_name]\n",
+    "test_accuracy = accuracy(X_test, y_test, best_run['W'], best_run['b'])\n",
+    "print(f'Selected configuration: {best_name}')\n",
+    "print(f\"Final validation accuracy: {best_run['history']['val_accuracy'][-1]:.4f}\")\n",
+    "print(f'Test accuracy: {test_accuracy:.4f}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-18",
+   "metadata": {},
+   "source": [
+    "## Report checklist\n",
+    "\n",
+    "- Derive both gradients, give their shapes, and explain the stability trick.\n",
+    "- Include the results table, training loss curve, and training/validation accuracy curves.\n",
+    "- Compare learning rate and regularization, discuss fit and a limitation of this linear classifier.\n",
+    "- State the selected configuration and its one-time test accuracy. Submit this executed notebook, `mnist_data_loader.py`, and your PDF report. Do not submit `mnist_data/`."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python (pytorch-learning)",
+   "language": "python",
+   "name": "pytorch-learning"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.15"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

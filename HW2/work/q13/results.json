@@ -1,0 +1,74 @@
+{
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.12.1+cpu",
+    "torchvision": "0.27.1+cpu",
+    "device": "cpu"
+  },
+  "output_files": {
+    "q1_3": "HW2/work/q13/q1_3.txt",
+    "q2": "HW2/work/q13/q2.txt",
+    "q3": "HW2/work/q13/q3.txt",
+    "scripts": [
+      "HW2/戴士博2025012128_HW2/hw2_q1_concept.py",
+      "HW2/戴士博2025012128_HW2/hw2_q2_tensors.py",
+      "HW2/戴士博2025012128_HW2/hw2_q3_autograd.py"
+    ]
+  },
+  "q1_3": {
+    "x_grad": 36.0,
+    "y_grad": null,
+    "y_is_leaf": false,
+    "y2_grad_retained": 12.0,
+    "x2_grad": 36.0,
+    "analytical": "loss = y^2 = (3x)^2 = 9x^2, so dloss/dx = 18x = 36 at x = 2 and dloss/dy = 2y = 12 at y = 6. Autograd populates .grad only for leaf tensors by default, so y.grad is None; calling y.retain_grad() before backward() keeps dloss/dy."
+  },
+  "q2": {
+    "seed": 2026,
+    "operand_shape": [5, 5],
+    "dtype": "float32",
+    "central_slice_shape": [4, 2],
+    "central_slice_values": [
+      [5, 6],
+      [9, 10],
+      [13, 14],
+      [17, 18]
+    ],
+    "central_slice_indexing": "T[1:5, 1:3] with zero-based indexing: rows 1..4 and columns 1..2",
+    "flatten_shape": [24],
+    "flatten_values": [
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+      12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+    ],
+    "reshape_4x6_shape": [4, 6],
+    "permute_1_0_shape": [4, 6],
+    "reshape_vs_permute": "reshape(4, 6) reinterprets the same row-major element order under a new shape, so values follow the flat order 0..23 row by row. permute(1, 0) keeps the values in place and swaps the two axes, producing the transpose [[0,4,8,12,16,20], ...] as a view. reshape changes the logical shape, permute changes the axis order."
+  },
+  "q3": {
+    "seed": 2026,
+    "M": [
+      [1, 0, 2],
+      [1, 1, 0],
+      [0, 3, 1]
+    ],
+    "L_display": "2.398318",
+    "L_exact": 2.398318290710449,
+    "grad_a": [
+      [1, 0, 2],
+      [1, 1, 0],
+      [0, 3, 1]
+    ],
+    "grad_b": [
+      [2, 0, 4],
+      [2, 2, 0],
+      [0, 6, 2]
+    ],
+    "grad_c": [
+      [1, 0, 2],
+      [1, 1, 0],
+      [0, 3, 1]
+    ],
+    "explanation": "dL/dX = M exactly. A second backward on a fresh forward graph accumulates into the existing X.grad, giving 2 * M. Setting X.grad = None and running backward once more gives M again; a training step clears gradients so that they do not accumulate across steps.",
+    "done": true
+  }
+}

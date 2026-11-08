@@ -1,0 +1,62 @@
+
+========================================================================
+Question 3: setup (seed 2026)
+========================================================================
+X (leaf tensor, requires_grad=True) =
+tensor([[0.1525, 0.2519, 0.7310],
+        [0.0643, 0.0187, 0.4945],
+        [0.7581, 0.0009, 0.6982]], requires_grad=True)
+
+M (constant coefficient matrix) =
+tensor([[1., 0., 2.],
+        [1., 1., 0.],
+        [0., 3., 1.]])
+
+L(X) = sum_ij X_ij * M_ij, so the analytical gradient dL/dX is M.
+X.requires_grad = True, X.is_leaf = True
+
+========================================================================
+(a) First backward pass: L = (X * M).sum()
+========================================================================
+L = sum(X * M) = 2.398318
+
+X.grad after one backward (expected M) =
+tensor([[1., 0., 2.],
+        [1., 1., 0.],
+        [0., 3., 1.]])
+
+X.grad matches M (torch.allclose): True
+
+========================================================================
+(b) Second backward pass without clearing: gradients accumulate
+========================================================================
+The graph of L was freed by the first backward(), so build a new
+forward graph with the same leaf X.  X.grad is NOT cleared here.
+
+L2 = sum(X * M) = 2.398318   (same value as L)
+
+X.grad after the second backward (expected 2 * M) =
+tensor([[2., 0., 4.],
+        [2., 2., 0.],
+        [0., 6., 2.]])
+
+X.grad matches 2 * M (torch.allclose): True
+
+========================================================================
+(c) Reset X.grad = None, then backward once more
+========================================================================
+X.grad was set to None; L3 = sum(X * M) = 2.398318
+
+X.grad after resetting and one backward (expected M again) =
+tensor([[1., 0., 2.],
+        [1., 1., 0.],
+        [0., 3., 1.]])
+
+X.grad matches M (torch.allclose): True
+
+Summary of the three gradient results (each should be exact):
+  (a) X.grad = M      = [[1.0, 0.0, 2.0], [1.0, 1.0, 0.0], [0.0, 3.0, 1.0]]
+  (b) X.grad = 2 * M  = [[2.0, 0.0, 4.0], [2.0, 2.0, 0.0], [0.0, 6.0, 2.0]]
+  (c) X.grad = M      = [[1.0, 0.0, 2.0], [1.0, 1.0, 0.0], [0.0, 3.0, 1.0]]
+
+All checks passed.

@@ -1,0 +1,8 @@
+Epoch 1/5: train loss=0.400884, accuracy=87.46%
+Epoch 2/5: train loss=0.178810, accuracy=94.65%
+Epoch 3/5: train loss=0.132231, accuracy=96.02%
+Epoch 4/5: train loss=0.105875, accuracy=96.77%
+Epoch 5/5: train loss=0.091024, accuracy=97.18%
+Full training set: initial loss=2.326570, final loss=0.089063
+Full training set: final accuracy=97.34%
+Final test set: loss=0.106050, accuracy=96.79%

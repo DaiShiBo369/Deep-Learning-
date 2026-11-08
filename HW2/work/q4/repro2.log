@@ -1,0 +1,146 @@
+﻿python.exe : [NbConvertApp] Converting notebook HW2\_repro.ipynb to notebook
+所在位置 行:1 字符: 305
++ ... nb" -Force; & $py -m nbconvert --to notebook --execute "HW2\_repro.ip ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([NbConvertApp] ...ynb to notebook:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[NbConvertApp] ERROR | (5, 'SetFileSecurity', '�ܾ����ʡ�')
+Traceback (most recent call last):
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\manager.py", line 107, in wrapp
+er
+    out = await method(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\manager.py", line 523, in _asyn
+c_start_kernel
+    kernel_cmd, kw = await self._async_pre_start_kernel(**kw)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\manager.py", line 488, in _asyn
+c_pre_start_kernel
+    kw = await self.provisioner.pre_launch(**kw)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\provisioning\local_provisioner.
+py", line 237, in pre_launch
+    km.write_connection_file()
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\connect.py", line 537, in write
+_connection_file
+    self.connection_file, cfg = write_connection_file(
+                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\connect.py", line 185, in write
+_connection_file
+    with secure_write(fname) as f:
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_core\paths.py", line 1080, in secure_w
+rite
+    win32_restrict_file_to_user(fname)
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_core\paths.py", line 640, in win32_res
+trict_file_to_user
+    win32security.SetFileSecurity(fname, win32security.DACL_SECURITY_INFORMATION, sd)
+pywintypes.error: (5, 'SetFileSecurity', '�ܾ����ʡ�')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\__main__.py", line 5, in <module>
+    main()
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_core\application.py", line 284, in lau
+nch_instance
+    super().launch_instance(argv=argv, **kwargs)
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\traitlets\config\application.py", line 1082, i
+n launch_instance
+    app.start()
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\nbconvertapp.py", line 420, in start
+    self.convert_notebooks()
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\nbconvertapp.py", line 597, in conve
+rt_notebooks
+    self.convert_single_notebook(notebook_filename)
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\nbconvertapp.py", line 563, in conve
+rt_single_notebook
+    output, resources = self.export_single_notebook(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\nbconvertapp.py", line 487, in expor
+t_single_notebook
+    output, resources = self.exporter.from_filename(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\exporters\exporter.py", line 201, in
+ from_filename
+    return self.from_file(f, resources=resources, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\exporters\exporter.py", line 220, in
+ from_file
+    return self.from_notebook_node(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\exporters\notebook.py", line 36, in 
+from_notebook_node
+    nb_copy, resources = super().from_notebook_node(nb, resources, **kw)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\exporters\exporter.py", line 154, in
+ from_notebook_node
+    nb_copy, resources = self._preprocess(nb_copy, resources)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\exporters\exporter.py", line 353, in
+ _preprocess
+    nbc, resc = preprocessor(nbc, resc)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\preprocessors\base.py", line 48, in 
+__call__
+    return self.preprocess(nb, resources)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbconvert\preprocessors\execute.py", line 97, 
+in preprocess
+    with self.setup_kernel():
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbclient\client.py", line 600, in setup_kernel
+    self.start_new_kernel(**kwargs)
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_core\utils\__init__.py", line 165, in 
+wrapped
+    return loop.run_until_complete(inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\asyncio\base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\nbclient\client.py", line 550, in async_start_
+new_kernel
+    await ensure_async(self.km.start_kernel(extra_arguments=self.extra_arguments, **kwargs))
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_core\utils\__init__.py", line 214, in 
+ensure_async
+    result = await obj
+             ^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\manager.py", line 116, in wrapp
+er
+    raise e
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\manager.py", line 107, in wrapp
+er
+    out = await method(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\manager.py", line 523, in _asyn
+c_start_kernel
+    kernel_cmd, kw = await self._async_pre_start_kernel(**kw)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\manager.py", line 488, in _asyn
+c_pre_start_kernel
+    kw = await self.provisioner.pre_launch(**kw)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\provisioning\local_provisioner.
+py", line 237, in pre_launch
+    km.write_connection_file()
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\connect.py", line 537, in write
+_connection_file
+    self.connection_file, cfg = write_connection_file(
+                                ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_client\connect.py", line 185, in write
+_connection_file
+    with secure_write(fname) as f:
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_core\paths.py", line 1080, in secure_w
+rite
+    win32_restrict_file_to_user(fname)
+  File "C:\Users\17857\anaconda3\envs\pytorch-learning\Lib\site-packages\jupyter_core\paths.py", line 640, in win32_res
+trict_file_to_user
+    win32security.SetFileSecurity(fname, win32security.DACL_SECURITY_INFORMATION, sd)
+pywintypes.error: (5, 'SetFileSecurity', '�ܾ����ʡ�')

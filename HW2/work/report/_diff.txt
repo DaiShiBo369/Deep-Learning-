@@ -1,0 +1,404 @@
+--- replace old 1-3 new 1-3
+  OLD: 深度学习导论          作业二（HW2）：PyTorch 基础
+  OLD: 
+  OLD: 戴士博 学号：2025012128
+  NEW: 深度学习导论 作业二（HW2）：PyTorch 基础
+  NEW: 
+  NEW: 戴士博 学号：2025012128
+--- replace old 15-17 new 15-17
+  OLD: 种子，并按照题目要求固定了批大小、优化器、学习率与训练轮数。具体信息见表 1。
+  OLD: 
+  OLD: 表 1: 运行环境与实验配置
+  NEW: 种子，并按照题目要求固定了批大小、优化器、学习率与训练轮数。具体信息见表 ??。
+  NEW: 
+  NEW: 表 1: 运行环境与实验配置
+--- replace old 23-24 new 24-25
+  OLD: 运行设备                    CPU（无 GPU）     ，torch.set_num_threads(2)
+  OLD: MNIST 数据                本地      IDX     文 件， 经    prepare_mnist.py 放至
+  NEW: 运行设备                    CPU（无 GPU），torch.set num threads(2)
+  NEW: MNIST 数据                本地      IDX    文 件， 经 prepare mnist.py   放至
+--- replace old 40-44 new 41-44
+  OLD: logits 和形状 (N, ) 的整数类别目标；它在内部把 log_softmax 与负对数似然（NLL）合并计算，等
+  OLD: 价于“先 softmax 再取 − log py ”，但数值更稳定。若先手动 softmax 再传入，相当于重复归一化，
+  OLD: 会让梯度变小甚至饱和，是错误用法。
+  OLD: 目标的 dtype 必须是整数类型 torch.long（即 int64），不能是浮点或 one-hot；合法标签范
+  OLD: 围是 [0, C − 1]，本题 C = 10，即标签取 0, 1, . . . , 9。超出范围会触发索引错误或未定义行为。
+  NEW: logits 和形状 (N, ) 的整数类别目标；它在内部把 log softmax 与负对数似然（NLL）合并计算，
+  NEW: 等价于“先 softmax 再取 − log py ”，但数值更稳定。若先手动 softmax 再传入，相当于重复归一
+  NEW: 化，会让梯度变小甚至饱和，是错误用法。
+  NEW: 目标的 dtype 必须是整数类型 torch.long（即 int64）
+--- replace old 56-61 new 56-60
+  OLD: 答：不会。model.eval() 只是把模块切换到“推理模式”，改变的是某些层的前向行为：Dropout
+  OLD: 停止随机丢弃、BatchNorm 改用训练时累计的 running mean/var 而不是当前 batch 统计量；它不
+  OLD: 影响 autograd，前向仍会构建计算图、梯度仍可计算。
+  OLD: torch.no_grad() 才是关闭梯度记录（不构建计算图）的上下文管理器，用于节省显存与计算。
+  OLD: 两者的目的不同：eval() 控制“层怎么算”，no_grad() 控制“要不要记录梯度”。推理时通常二者
+  OLD: 一起使用：model.eval() + with torch.no_grad():。
+  NEW: 答： 不会。 model.eval() 只是把模块切换到 “推理模式”， 改变的是某些层的前向行为：
+  NEW: Dropout 停止随机丢弃、BatchNorm 改用训练时累计的 running mean/var 而不是当前 batch 统计
+  NEW: 量；不影响 autograd，前向仍会构建计算图、梯度仍可计算。
+  NEW: torch.no grad() 才是关闭梯度记录。通常二者一起使用：model.eval() + with torch.no grad():。
+  NEW: 
+--- replace old 71-71 new 70-70
+  OLD: 因此 x.grad 为 tensor(36.)。y.grad 默认为 None：PyTorch 只为叶子张量（is_leaf=True，如
+  NEW: 因此 x.grad 为 tensor(36.)。y.grad 默认为 None：PyTorch 只为叶子张量（is leaf=True，如
+--- replace old 73-75 new 72-74
+  OLD: 若要保留 y 的梯度，应在调用 backward() 之前对 y 调用 y.retain_grad()；这样反向传播后
+  OLD: y.grad 为 tensor(12.)。注意一张计算图被 backward() 释放后不能再次反向传播，演示时必须重
+  OLD: 新做一次前向。
+  NEW: 若要保留 y 的梯度，应在调用 backward() 之前 对 y 调用 y.retain grad()；这样反向传播
+  NEW: 后 y.grad 为 tensor(12.)。一张计算图被 backward() 释放后不能再次反向传播，演示必须重新
+  NEW: 做一次前向。
+--- replace old 96-96 new 95-95
+  OLD: 图 1: 1.3 的运行结果：x.grad 与 y.grad，以及 retain_grad() 的用法
+  NEW: 图 1: 1.3 的运行结果：x.grad 与 y.grad，以及 retain grad() 的用法
+--- replace old 101-113 new 100-111
+  OLD: 数学上可能，但不推荐。若分类器末端为 softmax，输出为概率向量 p = softmax(z)，对 one-hot
+  OLD: ∑
+  OLD: 目标 t 计算 LMSE = N1 i kpi − ti k2 是完全可定义、可微的复合函数，autograd 也能算出梯度，因
+  OLD: 此“可行”。
+  OLD: 但类索引分类通常优先交叉熵，原因有三点：(1) 交叉熵是最大似然/最小化负对数似然，概率
+  OLD: 解释与训练目标一致；(2) 梯度性质更好：softmax+ 交叉熵对 logits 的梯度是 p − t，预测错得越
+  OLD: 离谱梯度越大；而 softmax+MSE 对 logits 的梯度含 softmax 的雅可比因子 pk (δkl − pl )，在输出
+  OLD: 饱和（很自信但错误）时梯度会被压得很小，训练更慢；(3) softmax+ 交叉熵对 logits 是凸的，而
+  NEW: 数学上可能，但不推荐。 若分类器末端为 softmax，输出为概率向量 p = softmax(z)，对 one-
+  NEW: hot 目标 t 计算 LMSE = N1 i ∥pi − ti ∥2 是完全可定义、可微的复合函数，autograd 也能算出梯度，
+  NEW: P
+  NEW: 
+  NEW: 因此“可行”。
+  NEW: 但类索引分类通常优先交叉熵：(1) 交叉熵是最大似然/最小化负对数似然，概率解释与训练目
+  NEW: 标一致；(2) 梯度性质更好：softmax+交叉熵对 logits 的梯度是 p − t，预测错得越离谱梯度越大(3)
+  NEW: softmax+交叉熵对 logits 是凸的，而 softmax+MSE 非凸，优化更困难。因此结论是“可能但不推
+--- replace old 117-117 new 115-115
+  OLD: 按题目要求创建 float32 的 5 × 5 随机张量 A, B，并用 torch.zeros_like(A) 创建 C；所有运
+  NEW: 按题目要求创建 float32 的 5 × 5 随机张量 A, B，并用 torch.zeros like(A) 创建 C；所有运
+--- delete old 129-130 new 127-126
+  OLD: 3 张量操作（Question 2，1.00 分）                                4
+  OLD: 
+--- replace old 134-134 new 130-134
+  OLD: 告中已将二者分别明确标注为 elementwise 与 matrix。运行结果见图 2 与图 3。
+  NEW: 
+  NEW: 3 张量操作（Question 2，1.00 分）                             4
+  NEW: 
+  NEW: 
+  NEW: 告中已将二者分别明确标注为 elementwise 与 matrix。运行结果见图 ?? 与图 ??。
+--- replace old 141-146 new 141-146
+  OLD: 3 张量操作（Question 2，1.00 分）                                                 5
+  OLD: 
+  OLD: 
+  OLD: 
+  OLD: 
+  OLD: 图 3: 2.1 的 A + B、A − B、逐元素乘积 A ∗ B 与矩阵乘积 A@B（均已明确标注）
+  NEW: 3 张量操作（Question 2，1.00 分）                                                5
+  NEW: 
+  NEW: 
+  NEW: 
+  NEW: 
+  NEW: 图 3: 2.1 的 A + B、A − B、逐元素乘积 A ∗ B 与矩阵乘积 A@B（均已明确标注）
+--- replace old 151-153 new 151-153
+  OLD: T = torch.arange(24).reshape(6, 4)   # shape (6, 4)
+  OLD: flat = T.reshape(-1)                 # shape (24,)
+  OLD: central = T[1:5, 1:3]                # rows 1..4, cols 1..2 -> (4, 2)
+  NEW: T = torch.arange(24).reshape(6, 4)   # shape (6, 4)
+  NEW: flat = T.reshape(-1)                 # shape (24,)
+  NEW: central = T[1:5, 1:3]                # rows 1..4, cols 1..2 -> (4, 2)
+--- replace old 160-161 new 160-162
+  OLD:        
+  OLD:        .
+  NEW: .
+  NEW:       
+  NEW: 
+--- replace old 163-178 new 164-179
+  OLD: 17 18
+  OLD: 展平后形状为 (24, )，值为 0, 1, . . . , 23；原张量为 (6, 4)。对应截图见图 4、图 5。
+  OLD: reshape 与 permute 的区别：reshape 只改变张量的逻辑形状，按行优先（row-major）顺
+  OLD: 序重新解释同一串元素，不改变元素之间的先后次序；当新形状与原形状兼容且张量连续时返回视
+  OLD: 图，否则会复制数据。例如把 (6, 4) 变为 (4, 6) 时，元素仍按 0, 1, 2, . . . 的顺序逐行填入，所以各行
+  OLD: 是连续的 6 个数。permute 则是交换/重排维度轴：元素值保持原位置，但轴顺序改变，等价于转置
+  OLD: （T.permute(1,0) 即 T ⊤ ，形状 (4, 6)，第 i 列就是原来的第 i 行）。permute 返回的是非连续的视
+  OLD: 图，通常无需复制，但后续某些需要连续内存的操作前要调用 .contiguous()。简单说：reshape 变
+  NEW: 17 18
+  NEW: 展平后形状为 (24, )，值为 0, 1, . . . , 23；原张量为 (6, 4)。对应截图见图 ??、图 ??。
+  NEW: reshape 与 permute 的区别：reshape 只改变张量的逻辑形状，按行优先（row-major）顺
+  NEW: 序重新解释同一串元素，不改变元素之间的先后次序；当新形状与原形状兼容且张量连续时返回视
+  NEW: 图，否则会复制数据。例如把 (6, 4) 变为 (4, 6) 时，元素仍按 0, 1, 2, . . . 的顺序逐行填入，所以各行
+  NEW: 是连续的 6 个数。permute 则是交换/重排维度轴：元素值保持原位置，但轴顺序改变，等价于转
+  NEW: 置（T.permute(1,0) 即 T ⊤ ，形状 (4, 6)，第 i 列就是原来的第 i 行）。permute 返回的是非连续的
+  NEW: 视图，通常无需复制，但后续某些需要连续内存的操作前要调用 .contiguous()。简单说：reshape
+--- replace old 187-193 new 188-194
+  OLD: 4   自动求导与梯度累积（Question 3，0.75 分）
+  OLD: 
+  OLD: 设 X ∈ R3×3 为 requires_grad=True 的叶子张量，
+  OLD:        
+  OLD: 1 0 2            ∑
+  OLD:        
+  OLD: M =  1 1 0 ,  L(X) =     Xij Mij .
+  NEW: 4   自动求导与梯度累积（Question 3，0.75 分）
+  NEW: 
+  NEW: 设 X ∈ R3×3 为 requires grad=True 的叶子张量，
+  NEW:       
+  NEW: 1 0 2            X
+  NEW: M = 1 1 0 ,   L(X) =     Xij Mij .
+  NEW:       
+--- replace old 205-217 new 206-219
+  OLD: 4 自动求导与梯度累积（Question 3，0.75 分）                                     7
+  OLD: 
+  OLD: 
+  OLD: 4.1   (a) 第一次反向传播
+  OLD: ∑
+  OLD: 前向计算 L =        X    M 后调用 backward()，得到 X.grad：
+  OLD:        
+  OLD: 1 0 2
+  NEW: 4 自动求导与梯度累积（Question 3，0.75 分）                                   7
+  NEW: 
+  NEW: 
+  NEW: 4.1    (a) 第一次反向传播
+  NEW: 
+  NEW: 前向计算 L =        X ⊙ M 后调用 backward()，得到 X.grad：
+  NEW: P
+  NEW:       
+--- replace old 228-231 new 230-233
+  OLD: 图 6: (a) 第一次 backward() 后的 X.grad，等于 M
+  OLD: 
+  OLD: 
+  OLD: 4.2   (b) 不清空梯度时的累积
+  NEW: 图 6: (a) 第一次 backward() 后的 X.grad，等于 M
+  NEW: 
+  NEW: 
+  NEW: 4.2    (b) 不清空梯度时的累积
+--- replace old 234-235 new 236-238
+  OLD: ∑
+  OLD: 新构造一份前向图 L2 =     X M 再调用 backward()。PyTorch 的 .grad 默认是累加的，不清空
+  NEW: 新构造一份前向图 L2 = X ⊙ M 再调用 backward()。PyTorch 的 .grad 默认是累加的，不清空
+  NEW: P
+  NEW: 
+--- replace old 237-246 new 240-249
+  OLD:        
+  OLD: 2 0 4
+  OLD:        
+  OLD: X.grad → M + M = 2M = 2 2 0 .
+  OLD: 0 6 2
+  OLD: 
+  OLD: 5 MNIST 两层 MLP 分类（Question 4，2.00 分）                      8
+  OLD: 
+  NEW:       
+  NEW: 2 0 4
+  NEW: X.grad → M + M = 2M = 2 2 0 .
+  NEW:       
+  NEW: 0 6 2
+  NEW: 
+  NEW: 5 MNIST 两层 MLP 分类（Question 4，2.00 分）                        8
+  NEW: 
+--- replace old 256-261 new 259-264
+  OLD: 执行 X.grad = None 后重新计算一次 L3 并反向传播，梯度重新从零开始累加，结果又回到 M
+  OLD: （图 8）。
+  OLD: 正常训练每一步要清空梯度，是因为参数梯度默认跨反向传播累加：若不清零，第 k 步的 step()
+  OLD: 会使用前 k 个 mini-batch 梯度之和，等效于不断放大学习率并把历史 batch 的信息混入当前更新，
+  OLD: 导致更新方向错误。因此标准训练循环在每次 backward() 之前调用 optimizer.zero_grad()（或
+  OLD: 把 .grad 置 None），使本次更新只依赖当前 mini-batch。
+  NEW: 执行 X.grad = None 后重新计算一次 L3 并反向传播，梯度重新从零开始累加，结果又回到
+  NEW: M （图 ??）。
+  NEW: 正常训练每一步要清空梯度， 是因为参数梯度默认跨反向传播累加： 若不清零， 第 k 步
+  NEW: 的 step() 会使用前 k 个 mini-batch 梯度之和， 等效于不断放大学习率并把历史 batch
+  NEW: 的信息混入当前更新， 导致更新方向错误。 因此标准训练循环在每次 backward() 之前调用
+  NEW: optimizer.zero grad()（或把 .grad 置 None），使本次更新只依赖当前 mini-batch。
+--- replace old 270-272 new 273-275
+  OLD: 5   MNIST 两层 MLP 分类（Question 4，2.00 分）
+  OLD: 
+  OLD: 本题在提供的 HW2_PyTorch_Basics.ipynb 中完成全部 TODO，并已按顺序执行全部单元格。
+  NEW: 5   MNIST 两层 MLP 分类（Question 4，2.00 分）
+  NEW: 
+  NEW: 本题在提供的 HW2 PyTorch Basics.ipynb 中完成全部 TODO，并已按顺序执行全部单元格。
+--- replace old 287-292 new 290-294
+  OLD: 创建训练集与测试集两个 datasets.MNIST 对象（分别令 train=True 与 train=False）         传入同
+  OLD: ，
+  OLD: 一个 transform，并设置 download=not available；其中 available 来自 prepare_mnist(root)，
+  OLD: 本地文件已就绪时为 True，因此不会下载。DataLoader 使用 batch_size=64、num_workers=0，仅
+  OLD: 训练集 shuffle=True，其 generator 为 torch.Generator().manual_seed(2026)；测试集保持顺
+  OLD: 序遍历。
+  NEW: 创建训练集与测试集两个 datasets.MNIST 对象（分别令 train=True 与 train=False），传入
+  NEW: 同一个 transform，并设置 download=not available；其中 available 来自 prepare mnist(root)，
+  NEW: 本地文件已就绪时为 True，因此不会下载。DataLoader 使用 batch size=64、num workers=0，
+  NEW: 仅训练集 shuffle=True，其 generator 为 torch.Generator().manual seed(2026)；测试集保
+  NEW: 持顺序遍历。
+--- replace old 312-312 new 314-315
+  OLD: 表 2: 一个训练 batch 的属性（notebook 自检输出）
+  NEW: 
+  NEW: 表 2: 一个训练 batch 的属性（notebook 自检输出）
+--- replace old 330-333 new 333-336
+  OLD: Dataset 与 DataLoader 的区别：Dataset 描述“单个样本如何取得”，需要实现 __len__
+  OLD: 与 __getitem__，负责索引、读取图像、套用 transform、返回 (image, label)；它本身不知道
+  OLD: batch 的概念。DataLoader 是 Dataset 之上的迭代器/调度器，负责按 batch_size 组批、shuffle、
+  OLD: 用 collate 把样本堆叠成张量、并行预取以及与多进程协作。num_workers=0 表示不使用额外的子
+  NEW: Dataset 与 DataLoader 的区别：Dataset 描述“单个样本如何取得”，需要实现 len
+  NEW: 与 getitem ，负责索引、读取图像、套用 transform、返回 (image, label)；它本身不知道
+  NEW: batch 的概念。DataLoader 是 Dataset 之上的迭代器/调度器，负责按 batch size 组批、shuffle、
+  NEW: 用 collate 把样本堆叠成张量、并行预取以及与多进程协作。num workers=0 表示不使用额外的子
+--- replace old 335-337 new 338-340
+  OLD: 完成）  ，没有子进程启动和跨进程拷贝开销，因此在本作业这种小数据集与 Windows 环境下最直接；
+  OLD: 当 num_workers>0 时，主进程会启动工作子进程并行取数，可能掩盖 I/O 瓶颈，但会带来进程开
+  OLD: 销。
+  NEW: 完成），没有子进程启动和跨进程拷贝开销，因此在本作业这种小数据集与 Windows 环境下最直
+  NEW: 接；当 num workers>0 时，主进程会启动工作子进程并行取数，可能掩盖 I/O 瓶颈，但会带来进
+  NEW: 程开销。
+--- replace old 346-348 new 349-351
+  OLD: 实现中 nn.Flatten() 把每张图展平成 784 维，两个 nn.Linear 分别为 784 → 128 与 128 → 10，中
+  OLD: 间接 ReLU；forward 返回形状 (B, 10) 的原始 logits，不接 softmax（softmax 由 CrossEntropyLoss
+  OLD: 内部完成）。参数量为 784 × 128 + 128 + 128 × 10 + 10 = 101,770。
+  NEW: 实现中 nn.Flatten() 把每张图展平成 784 维， 两个 nn.Linear 分别为 784 → 128 与
+  NEW: 128 → 10， 中间接 ReLU； forward 返回形状 (B, 10) 的原始 logits， 不接 softmax （softmax
+  NEW: 由 CrossEntropyLoss 内部完成）。参数量为 784 × 128 + 128 + 128 × 10 + 10 = 101,770。
+--- replace old 374-374 new 377-377
+  OLD: lr=0.1)。train_one_epoch 的核心循环如下（每个 batch）：
+  NEW: lr=0.1)。train one epoch 的核心循环如下（每个 batch）：
+--- replace old 377-381 new 380-384
+  OLD: optimizer.zero_grad()                 # 1. 清空上一步的梯度
+  OLD: logits = model(images_batch)          # 2. 前向
+  OLD: loss = loss_fn(logits, labels_batch) # 3. 计算交叉熵
+  OLD: loss.backward()                       # 4. 反向传播，计算梯度
+  OLD: optimizer.step()                      # 5. 用梯度更新参数
+  NEW: optimizer.zero_grad()                  # 1. 䰀尀ⰀⰀ䰀尀䰀㰀
+  NEW: logits = model(images_batch)           # 2. 㰀㰀
+  NEW: loss = loss_fn(logits, labels_batch) # 3. 氀尀Ⰰ㰀尀
+  NEW: loss.backward()                        # 4. 㰀㰀Ⰰ䰀�氀尀䰀㰀
+  NEW: optimizer.step()                       # 5. 尀䰀㰀䰀䰀㰀䰀
+--- replace old 389-389 new 392-392
+  OLD: θ ← θ − η ∂L/∂θ 修改参数。二者之间还有 optimizer.zero_grad()：因为 .grad 默认累加，不清
+  NEW: θ ← θ − η ∂L/∂θ 修改参数。二者之间还有 optimizer.zero grad()：因为 .grad 默认累加，不清
+--- replace old 391-404 new 394-408
+  OLD: ∑        ∑
+  OLD: 训练 5 轮，每轮的训练损失与准确率采用“按样本数加权的均值”，即 b lossb · Bb / b Bb ，准
+  OLD: 确率为累计正确预测数除以累计样本数（包含最后一批不满 64 的情形）。结果见表 3。
+  OLD: 
+  OLD: 表 3: 每轮训练指标（参数更新过程中累计的预测）
+  OLD: 
+  OLD: Epoch    训练损失（加权均值） 训练准确率
+  OLD: 1            0.400884            87.46%
+  NEW: 训练 5 轮，每轮的训练损失与准确率采用“按样本数加权的均值”，即 b lossb · Bb / b Bb ，
+  NEW: P        P
+  NEW: 
+  NEW: 准确率为累计正确预测数除以累计样本数（包含最后一批不满 64 的情形）。结果见表 ??。
+  NEW: 
+  NEW: 表 3: 每轮训练指标（参数更新过程中累计的预测）
+  NEW: 
+  NEW: Epoch    训练损失（加权均值）                训练准确率
+--- replace old 409-409 new 413-413
+  OLD: evaluate 使用 model.eval() 与 torch.no_grad()：前者关闭 Dropout 等训练期行为，后者
+  NEW: evaluate 使用 model.eval() 与 torch.no grad()：前者关闭 Dropout 等训练期行为，后者
+--- replace old 413-413 new 417-417
+  OLD: 一次；训练结束后再对完整测试集评估一次。最终结果见表 4，训练与测试输出见图 11。
+  NEW: 一次；训练结束后再对完整测试集评估一次。最终结果见表 ??，训练与测试输出见图 ??。
+--- replace old 417-420 new 421-424
+  OLD: 评估对象                       损失   准确率
+  OLD: 完整训练集（训练前，初始模型）  2.326570       –
+  OLD: 完整训练集（训练后，固定模型）  0.089063       97.34%
+  OLD: 完整测试集（训练后，仅评估一次） 0.106050       96.79%
+  NEW: 评估对象                        损失         准确率
+  NEW: 完整训练集（训练前，初始模型）             2.326570   –
+  NEW: 完整训练集（训练后，固定模型）             0.089063   97.34%
+  NEW: 完整测试集（训练后，仅评估一次）            0.106050   96.79%
+--- delete old 428-435 new 432-431
+  OLD: 需要区分两类指标：表中第 1、2 行是在“固定模型”上对完整训练集的一次评估；而表 3 的每
+  OLD: 轮训练指标是在参数不断更新的过程中累计的预测（一个 epoch 内早期 batch 的预测来自尚未训练
+  OLD: 充分的参数），所以第 5 轮训练准确率 97.18% 略低于训练后完整训练集的 97.34%，这是正常且符
+  OLD: 合预期的。
+  OLD: 
+  OLD: 5 MNIST 两层 MLP 分类（Question 4，2.00 分）                                               13
+  OLD: 
+  OLD: 
+--- replace old 438-442 new 434-442
+  OLD: 保存时只写 model.state_dict() 到 mnist_mlp.pt（本机运行得到的文件大小为 409,585
+  OLD: 字节） ，而不是序列化整个模型对象。重载时新建同结构的 MLP，用 torch.load(path,
+  OLD: map_location="cpu", weights_only=True) 载入权重并 load_state_dict，再调用 eval()。
+  OLD: 其中 map_location="cpu" 保证权重在 CPU 上恢复；weights_only=True 只反序列化张量等安全
+  OLD: 类型，避免加载任意 Python 对象（安全性更好）              。
+  NEW: 保存时只写 model.state dict() 到 mnist mlp.pt（本机运行得到的文件大小为 409,585 字
+  NEW: 节），而不是序列化整个模型对象。重载时新建同结构的 MLP，用 torch.load(path, map location="cpu",
+  NEW: weights only=True) 载入权重并 load state dict，再调用 eval()。其中 map location="cpu"
+  NEW: 保证权重在 CPU 上恢复；weights only=True 只反序列化张量等安全类型
+  NEW: 
+  NEW: 6 AI 使用声明（AI Statement）                                                            13
+  NEW: 
+  NEW: 
+--- replace old 452-453 new 452-453
+  OLD: 随后在固定图像 batch images[:16] 上，用 torch.no_grad() 分别计算原模型与重载模型的
+  OLD: logits，并用 torch.testing.assert_close 校验完全一致；重载模型预测的数字为
+  NEW: 随后在固定图像 batch images[:16] 上，用 torch.no grad() 分别计算原模型与重载模型的
+  NEW: logits，并用 torch.testing.assert close 校验完全一致；重载模型预测的数字为
+--- replace old 457-457 new 457-457
+  OLD: 与原模型相同，重载检查通过（图 12）。
+  NEW: 与原模型相同，重载检查通过（图 ??）。
+--- replace old 467-471 new 467-470
+  OLD: • 初始模型在训练集上的交叉熵为 2.3266，接近 10 类均匀随机时的 ln 10 ≈ 2.3026，符合随机
+  OLD: 初始化、输出接近均匀的预期；它也远大于训练后的 0.0891，说明训练确实显著降低了训练损
+  OLD: 失（notebook 中的断言 final_train_loss < initial_train_loss 也验证了这一点）。
+  OLD: • 5 轮内训练损失单调下降（0.4009 → 0.0910）
+  OLD: ，每轮训练准确率从 87.46% 升到 97.18%，训练
+  NEW:  初始模型在训练集上的交叉熵为 2.3266，接近 10 类均匀随机时的 ln 10 ≈ 2.3026，符合随机
+  NEW: 初始化、输出接近均匀的预期；它也远大于训练后的 0.0891，说明训练确实显著降低了训练
+  NEW: 损失（notebook 中的断言 final train loss < initial train loss 也验证了这一点）。
+  NEW:  5 轮内训练损失单调下降（0.4009 → 0.0910），每轮训练准确率从 87.46% 升到 97.18%，训练
+--- replace old 474-490 new 473-491
+  OLD: • 测试准确率 96.79%，训练（固定模型）准确率 97.34%，两者只差约 0.55 个百分点，泛化差距
+  OLD: 很小，5 轮训练下没有明显的过拟合；测试损失 0.1061 略高于训练损失 0.0891 也是同一现象。
+  OLD: 测试集只在 5 轮训练全部结束后评估一次，
+  OLD: • 按题目要求，                   未用于选择学习率、轮数或 checkpoint，
+  OLD: 因此该结果是干净的泛化估计。
+  OLD: 
+  OLD: 6 AI 使用声明（AI Statement）                                                    14
+  OLD: 
+  NEW:  测试准确率 96.79%，训练（固定模型）准确率 97.34%，两者只差约 0.55 个百分点，泛化差
+  NEW: 距很小，5 轮训练下没有明显的过拟合；测试损失 0.1061 略高于训练损失 0.0891 也是同一现
+  NEW: 象。
+  NEW:  按题目要求，测试集只在 5 轮训练全部结束后评估一次，未用于选择学习率、轮数或 check-
+  NEW: point，因此该结果是干净的泛化估计。
+  NEW: 
+  NEW: 
+  NEW: 6    AI 使用声明（AI Statement）
+--- replace old 492-494 new 493-495
+  OLD: 0.27.1+cpu、CPU）中实际运行；notebook 的全部断言通过，报告中每个损失、准确率、梯度
+  OLD: 矩阵与截图都来自本地运行输出；我已逐项阅读并理解提交的代码，能够解释每个函数与关键
+  OLD: 语句的作用。
+  NEW: 0.27.1+cpu、CPU）中实际运行；notebook 的全部断言通过，报告中每个损失、准确率、梯
+  NEW: 度矩阵与截图都来自本地运行输出；我自行编写、逐项阅读并理解提交的代码，能够解释每
+  NEW: 个函数与关键语句的作用。
+--- replace old 499-503 new 500-503
+  OLD: 7 复现说明与提交文件
+  OLD: 
+  OLD: 本地复现步骤：安装题目指定版本区间的 PyTorch/TorchVision，在 HW2 目录下放置 MNIST 的
+  OLD: ，
+  OLD: 四个 IDX 文件（或直接使用 data/MNIST/raw 中已准备好的文件）打开 HW2_PyTorch_Basics.ipynb
+  NEW: 7   复现说明与提交文件
+  NEW: 
+  NEW: 本地复现步骤：安装题目指定版本区间的 PyTorch/TorchVision，在 HW2 目录下放置 MNIST
+  NEW: 的四个 IDX 文件（或直接使用 data/MNIST/raw 中已准备好的文件），打开 HW2 PyTorch Basics.ipynb
+--- replace old 506-511 new 506-511
+  OLD: • HW2_PyTorch_Basics.ipynb：已执行、含全部输出；
+  OLD: • mnist_mlp.pt：本机训练得到的 checkpoint；
+  OLD: • 本报告 PDF；
+  OLD: • hw2_q1_concept.py、hw2_q2_tensors.py、hw2_q3_autograd.py：Q1.3 与 Q2、Q3 的独立
+  OLD: 代码；
+  OLD: • prepare_mnist.py：数据准备脚本。
+  NEW:  HW2 PyTorch Basics.ipynb：已执行、含全部输出；
+  NEW:  mnist mlp.pt：本机训练得到的 checkpoint；
+  NEW:  本报告 PDF；
+  NEW:  hw2 q1 concept.py、hw2 q2 tensors.py、hw2 q3 autograd.py：Q1.3 与 Q2、Q3 的独立代
+  NEW: 码；
+  NEW:  prepare mnist.py：数据准备脚本。
+--- replace old 517-526 new 517-525
+  OLD: • PyTorch     文 档：torch.nn.CrossEntropyLoss，https://pytorch.org/docs/stable/
+  OLD: generated/torch.nn.CrossEntropyLoss.html
+  OLD: • PyTorch 文档：Autograd mechanics（requires_grad、backward、retain_grad），https:
+  OLD: //pytorch.org/docs/stable/notes/autograd.html
+  OLD: • PyTorch 文档：torch.utils.data.DataLoader 与 Dataset，https://pytorch.org/docs/
+  OLD: stable/data.html
+  OLD: MNIST 数据集与 transforms.v2，
+  OLD: • TorchVision 文档：                       https://pytorch.org/vision/stable/
+  NEW:  PyTorch 文 档： torch.nn.CrossEntropyLoss， https://pytorch.org/docs/stable/
+  NEW: generated/torch.nn.CrossEntropyLoss.html
+  NEW:  PyTorch 文档：Autograd mechanics（requires grad、backward、retain grad），https:
+  NEW: //pytorch.org/docs/stable/notes/autograd.html
+  NEW:  PyTorch 文档：torch.utils.data.DataLoader 与 Dataset，https://pytorch.org/docs/
+  NEW: stable/data.html
+  NEW:  TorchVision 文档： MNIST 数据集与 transforms.v2， https://pytorch.org/vision/
+  NEW: stable/datasets.html
